@@ -1,5 +1,4 @@
 import React from "react";
-// import Box from '@mui/material/Box'
 import { arc as d3Arc } from "d3-shape";
 
 interface ThresholdRange {
@@ -168,12 +167,16 @@ export function RadialGauge({
   const endRad = degreesToRadians(endAngle);
 
   // Arc dimensions
-  const outerRingInner = radius - 3;
+  const OUTER_RING_WIDTH = 3;
+  const OUTER_RING_GAP = 2;
+  const REFERENCE_RING_WIDTH = 14;
+
+  const outerRingInner = radius - OUTER_RING_WIDTH;
   const outerRingOuter = radius;
-  const referenceRingInner = radius - 14;
-  const referenceRingOuter = radius - 5;
-  const valueRingInner = radius - 14;
-  const valueRingOuter = radius - 5;
+  const referenceRingInner = radius - REFERENCE_RING_WIDTH;
+  const referenceRingOuter = radius - OUTER_RING_WIDTH - OUTER_RING_GAP;
+  const valueRingInner = radius - REFERENCE_RING_WIDTH;
+  const valueRingOuter = radius - OUTER_RING_WIDTH - OUTER_RING_GAP;
 
   // Calculate value angle
   const normalizedValue = Math.max(0, Math.min(1, (value - min) / (max - min)));
@@ -181,7 +184,7 @@ export function RadialGauge({
 
   // Convert thresholds to segments
   const thresholdSegments = convertThresholdsToSegments(thresholds, min, max);
-  
+
   // Outer ring segments (min/max indicators)
   const outerSegments = thresholdSegments;
   const outerRingPaths = createSegmentedArcPath(
@@ -213,12 +216,14 @@ export function RadialGauge({
   );
 
   // indicator
-  const indicatorInner = valueRingOuter - 15;
+  const INDICATOR_LENGTH = 15;
+  const indicatorInner = valueRingOuter - INDICATOR_LENGTH;
+
   const indicatorTarget = {
     x: valueRingOuter * Math.sin(valueAngle),
-    y: centerY - 70 - VERTICAL_OFFSET - valueRingOuter * Math.cos(valueAngle),
+    y: -valueRingOuter * Math.cos(valueAngle),
     cx: indicatorInner * Math.sin(valueAngle),
-    cy: centerY - 70 - VERTICAL_OFFSET - indicatorInner * Math.cos(valueAngle),
+    cy: -indicatorInner * Math.cos(valueAngle),
   };
 
   // center text
