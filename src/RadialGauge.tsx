@@ -2,6 +2,11 @@ import React from "react";
 // import Box from '@mui/material/Box'
 import { arc as d3Arc } from "d3-shape";
 
+interface ThresholdRange {
+  value: number;
+  color: string;
+}
+
 interface ReferenceRingSegment {
   start: number;
   end: number;
@@ -21,7 +26,7 @@ interface GaugeProps {
   endAngle?: number;
 
   referenceRingSegements?: Array<ReferenceRingSegment>;
-  thresholdSegments?: Array<ReferenceRingSegment>;
+  thresholds?: Array<ThresholdRange>;
   valueFormat?: (value: unknown) => string;
 
   centerTextProps?: SvgTextProps;
@@ -80,6 +85,57 @@ function createSegmentedArcPath(
   });
 }
 
+function convertThresholdsToSegments(
+  thresholds: Array<ThresholdRange>,
+  min: number,
+  max: number
+): Array<ReferenceRingSegment> {
+  if (!Array.isArray(thresholds))
+    throw new Error(
+      "thresholds must be an array of objects { value: number, color: string }"
+    );
+  if (thresholds.length === 0) {
+    return [{ start: 0, end: 1, color: "var(--mui-palette-success-main)" }];
+  }
+
+  // Sort thresholds by value
+  const sortedThresholds = [...thresholds].sort((a, b) => a.value - b.value);
+  const segments: Array<ReferenceRingSegment> = [];
+
+  let currentStart = 0;
+
+  for (let i = 0; i < sortedThresholds.length; i++) {
+    const threshold = sortedThresholds[i];
+    const normalizedEnd = Math.max(
+      0,
+      Math.min(1, (threshold.value - min) / (max - min))
+    );
+
+    if (normalizedEnd > currentStart) {
+      segments.push({
+        start: currentStart,
+        end: normalizedEnd,
+        color: threshold.color,
+      });
+      currentStart = normalizedEnd;
+    }
+  }
+
+  // Add final segment if needed
+  if (currentStart < 1) {
+    const lastColor =
+      sortedThresholds[sortedThresholds.length - 1]?.color ||
+      "var(--mui-palette-success-main)";
+    segments.push({
+      start: currentStart,
+      end: 1,
+      color: lastColor,
+    });
+  }
+
+  return segments;
+}
+
 export function RadialGauge({
   value,
   min = 0,
@@ -90,10 +146,10 @@ export function RadialGauge({
   startAngle = -40,
   endAngle = 220,
   referenceRingSegements = [{ start: 0, end: 1, color: "silver" }],
-  thresholdSegments = [
-    { start: 0, end: 0.6, color: "limegreen" }, // Green zone
-    { start: 0.6, end: 0.8, color: "orange" }, // Orange zone
-    { start: 0.8, end: 1, color: "tomato" }, // Red zone
+  thresholds = [
+    { value: max * 0.6, color: "limegreen" },
+    { value: max * 0.8, color: "orange" },
+    { value: max, color: "tomato" },
   ],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   valueFormat = (value: any) => value,
@@ -123,6 +179,9 @@ export function RadialGauge({
   const normalizedValue = Math.max(0, Math.min(1, (value - min) / (max - min)));
   const valueAngle = startRad + normalizedValue * (endRad - startRad);
 
+  // Convert thresholds to segments
+  const thresholdSegments = convertThresholdsToSegments(thresholds, min, max);
+  
   // Outer ring segments (min/max indicators)
   const outerSegments = thresholdSegments;
   const outerRingPaths = createSegmentedArcPath(

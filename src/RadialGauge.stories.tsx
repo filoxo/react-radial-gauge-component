@@ -27,12 +27,12 @@ export const MutlipleThresholds: Story = {
     value: 25,
     max: 100,
     unit: "rpm",
-    thresholdSegments: [
-      { start: 0, end: 0.1, color: "tomato" }, // Green zone
-      { start: 0.1, end: 0.2, color: "orange" }, // Orange zone
-      { start: 0.2, end: 0.8, color: "limegreen" }, // Green zone
-      { start: 0.8, end: 0.9, color: "orange" }, // Orange zone
-      { start: 0.9, end: 1, color: "tomato" }, // Red zone
+    thresholds: [
+      { value: 10, color: "tomato" },
+      { value: 20, color: "orange" },
+      { value: 80, color: "limegreen" },
+      { value: 90, color: "orange" },
+      { value: 100, color: "tomato" },
     ],
   },
 };
