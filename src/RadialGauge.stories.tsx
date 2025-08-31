@@ -53,3 +53,12 @@ export const HalfMoon: Story = {
     },
   },
 };
+
+export const SingleThreshold: Story = {
+  args: {
+    value: 75,
+    max: 100,
+    unit: "%",
+    thresholds: [{ value: 100, color: "mediumseagreen" }],
+  },
+};
