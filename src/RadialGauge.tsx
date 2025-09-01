@@ -27,9 +27,13 @@ interface GaugeProps {
   referenceRingSegements?: Array<ReferenceRingSegment>;
   thresholds?: Array<ThresholdRange>;
   valueFormat?: (value: unknown) => string;
+  showThresholdTicks?: boolean;
+  showThresholdLabels?: boolean;
 
   centerTextProps?: SvgTextProps;
   unitTextProps?: SvgTextProps;
+  thresholdTicksProps?: React.SVGLineElementAttributes<SVGLineElement>;
+  thresholdTextProps?: SvgTextProps;
 }
 
 function degreesToRadians(degrees: number): number {
@@ -94,7 +98,7 @@ function convertThresholdsToSegments(
       "thresholds must be an array of objects { value: number, color: string }"
     );
   if (thresholds.length === 0) {
-    return [{ start: 0, end: 1, color: "var(--mui-palette-success-main)" }];
+    return [{ start: 0, end: 1, color: "limegreen" }];
   }
 
   // Sort thresholds by value
@@ -123,8 +127,7 @@ function convertThresholdsToSegments(
   // Add final segment if needed
   if (currentStart < 1) {
     const lastColor =
-      sortedThresholds[sortedThresholds.length - 1]?.color ||
-      "var(--mui-palette-success-main)";
+      sortedThresholds[sortedThresholds.length - 1]?.color || "limegreen";
     segments.push({
       start: currentStart,
       end: 1,
@@ -133,6 +136,51 @@ function convertThresholdsToSegments(
   }
 
   return segments;
+}
+
+function createThresholdTicks(
+  radius: number,
+  startAngle: number,
+  endAngle: number,
+  segments: Array<{ start: number; end: number; color: string }>,
+  min: number,
+  max: number
+): Array<{ x1: number; y1: number; x2: number; y2: number; value: number }> {
+  const totalAngle = endAngle - startAngle;
+  const tickLength = 8;
+  const ticks: Array<{
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+    value: number;
+  }> = [];
+
+  // Get unique threshold boundaries
+  const boundaries = new Set<number>();
+  segments.forEach((segment) => {
+    boundaries.add(segment.start);
+    boundaries.add(segment.end);
+  });
+
+  Array.from(boundaries).forEach((boundary) => {
+    const angle = startAngle + boundary * totalAngle;
+    const outerX = radius * Math.sin(angle);
+    const outerY = -radius * Math.cos(angle);
+    const innerX = (radius - tickLength) * Math.sin(angle);
+    const innerY = -(radius - tickLength) * Math.cos(angle);
+    const value = min + boundary * (max - min);
+
+    ticks.push({
+      x1: innerX,
+      y1: innerY,
+      x2: outerX,
+      y2: outerY,
+      value,
+    });
+  });
+
+  return ticks;
 }
 
 export function RadialGauge({
@@ -152,8 +200,12 @@ export function RadialGauge({
   ],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   valueFormat = (value: any) => value,
+  showThresholdTicks = false,
+  showThresholdLabels = false,
   centerTextProps,
   unitTextProps,
+  thresholdTicksProps,
+  thresholdTextProps,
 }: GaugeProps) {
   const svgId = React.useId();
   const VERTICAL_OFFSET = 10;
@@ -184,6 +236,18 @@ export function RadialGauge({
 
   // Convert thresholds to segments
   const thresholdSegments = convertThresholdsToSegments(thresholds, min, max);
+
+  // Threshold ticks
+  const thresholdTicks = showThresholdTicks
+    ? createThresholdTicks(
+        outerRingOuter,
+        startRad,
+        endRad,
+        thresholdSegments,
+        min,
+        max
+      )
+    : [];
 
   // Outer ring segments (min/max indicators)
   const outerSegments = thresholdSegments;
@@ -252,6 +316,26 @@ export function RadialGauge({
     } satisfies SvgTextProps;
   };
 
+  const getThresholdTicksProps = () => {
+    return {
+      stroke: "currentColor",
+      strokeWidth: 2,
+      opacity: 1,
+      ...thresholdTicksProps,
+    } satisfies React.SVGLineElementAttributes<SVGLineElement>;
+  };
+
+  const getThresholdTextProps = () => {
+    return {
+      textAnchor: "middle",
+      dominantBaseline: "middle",
+      fontSize: "0.6rem",
+      fontWeight: "bold",
+      fill: "currentColor",
+      ...thresholdTextProps,
+    } satisfies SvgTextProps;
+  };
+
   return (
     <div
       style={{
@@ -290,6 +374,34 @@ export function RadialGauge({
           {/* Value arc */}
           <path d={valueArcPath} fill={valueColor} opacity={1} />
 
+          {/* Threshold ticks */}
+          <g className="threshold-elements">
+            {thresholdTicks.map((tick, index) => (
+              <line
+                key={`tick-${index}`}
+                x1={tick.x1}
+                y1={tick.y1}
+                x2={tick.x2}
+                y2={tick.y2}
+                {...getThresholdTicksProps()}
+              />
+            ))}
+
+            {/* Threshold labels */}
+            {showThresholdLabels &&
+              thresholdTicks.map((tick, index) => (
+                <text
+                  key={`label-${index}`}
+                  x={tick.x2 + (tick.x2 - tick.x1) * 1.5 + 2}
+                  y={tick.y2 + (tick.y2 - tick.y1) * 1.5 + 2}
+                  {...getThresholdTextProps()}
+                >
+                  {Number(tick.value.toFixed(1)).toString()}
+                </text>
+              ))}
+          </g>
+
+          {/* Indicator */}
           <path
             d={`M ${indicatorTarget.cx} ${indicatorTarget.cy} L ${indicatorTarget.x} ${indicatorTarget.y}`}
             stroke={valueColor}

@@ -62,3 +62,19 @@ export const SingleThreshold: Story = {
     thresholds: [{ value: 100, color: "mediumseagreen" }],
   },
 };
+
+export const WithTicks: Story = {
+  args: {
+    value: 25,
+    max: 100,
+    unit: "rpm",
+    showThresholdTicks: true,
+    showThresholdLabels: true,
+    thresholdTextProps: {
+      color: "gray",
+    },
+    thresholdTicksProps: {
+      stroke: "gray",
+    },
+  },
+};
