@@ -1,7 +1,7 @@
 import React from "react";
 import { arc as d3Arc } from "d3-shape";
 
-interface ThresholdRange {
+interface SegmentRange {
   value: number;
   color: string;
 }
@@ -24,8 +24,8 @@ interface GaugeProps {
   startAngle?: number;
   endAngle?: number;
 
-  referenceRingSegements?: Array<ReferenceRingSegment>;
-  thresholds?: Array<ThresholdRange>;
+  referenceThresholds?: Array<SegmentRange>;
+  thresholds?: Array<SegmentRange>;
   valueFormat?: (value: unknown) => string;
   showThresholdTicks?: boolean;
   showThresholdLabels?: boolean;
@@ -89,7 +89,7 @@ function createSegmentedArcPath(
 }
 
 function convertThresholdsToSegments(
-  thresholds: Array<ThresholdRange>,
+  thresholds: Array<SegmentRange>,
   min: number,
   max: number
 ): Array<ReferenceRingSegment> {
@@ -192,7 +192,7 @@ export function RadialGauge({
   height = 140,
   startAngle = -40,
   endAngle = 220,
-  referenceRingSegements = [{ start: 0, end: 1, color: "silver" }],
+  referenceThresholds = [{ value: max, color: "silver" }],
   thresholds = [
     { value: max * 0.6, color: "limegreen" },
     { value: max * 0.8, color: "orange" },
@@ -258,12 +258,19 @@ export function RadialGauge({
     endRad,
     outerSegments
   );
+
+  const referenceRingSegments = convertThresholdsToSegments(
+    referenceThresholds,
+    min,
+    max
+  );
+
   const referenceRingPaths = createSegmentedArcPath(
     referenceRingInner,
     referenceRingOuter,
     startRad,
     endRad,
-    referenceRingSegements
+    referenceRingSegments
   );
 
   // Value arc
