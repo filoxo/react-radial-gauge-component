@@ -51,11 +51,7 @@ export const MutlipleThresholds: Story = {
       return () => clearInterval(interval);
     }, [args.max]);
 
-    return (
-      <div style={{ width: "200px", height: "200px" }}>
-        <RadialGauge {...args} value={value} />
-      </div>
-    );
+    return <RadialGauge {...args} value={value} width={200} height={200} />
   }
 };
 
