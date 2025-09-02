@@ -51,6 +51,7 @@ export const HalfMoon: Story = {
     unitTextProps: {
       y: -2,
     },
+    verticalOffset: 25,
   },
 };
 
@@ -76,5 +77,17 @@ export const WithTicks: Story = {
     thresholdTicksProps: {
       stroke: "gray",
     },
+  },
+};
+
+export const CustomSizing: Story = {
+  args: {
+    value: 25,
+    max: 100,
+    unit: "rpm",
+    outerRingWidth: 5,
+    outerRingGap: 0,
+    referenceRingWidth: 20,
+    indicatorLength: 20,
   },
 };
