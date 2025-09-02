@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { arc as d3Arc } from "d3-shape";
+import { interpolate } from "d3-interpolate";
+import { easeQuadOut } from "d3-ease";
 
 interface SegmentRange {
   value: number;
@@ -34,6 +36,8 @@ interface GaugeProps {
   unitTextProps?: SvgTextProps;
   thresholdTicksProps?: React.SVGLineElementAttributes<SVGLineElement>;
   thresholdTextProps?: SvgTextProps;
+  transtionDuration?: number;
+  easingFn?: (t: number) => number;
 
   verticalOffset?: number;
   outerRingWidth?: number;
@@ -212,6 +216,8 @@ export function RadialGauge({
   unitTextProps,
   thresholdTicksProps,
   thresholdTextProps,
+  transtionDuration = 250,
+  easingFn = easeQuadOut as (t: number) => number,
 
   // Arc dimensions
   verticalOffset = 10,
@@ -221,6 +227,33 @@ export function RadialGauge({
   indicatorLength = 15,
 }: GaugeProps) {
   const svgId = React.useId();
+  const [tweenValue, setTweenValue] = useState(value);
+  const animationRef = useRef<number>(0);
+
+  useEffect(() => {
+    const startValue = tweenValue;
+    const startTime = Date.now();
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / transtionDuration, 1);
+      const easedProgress = easingFn(progress);
+      
+      const currentValue = interpolate(startValue, value)(easedProgress);
+      setTweenValue(currentValue);
+      
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      }
+    };
+    
+    animate();
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [value, tweenValue, transtionDuration, easingFn]);
 
   const radius = Math.min(width, height) / 2;
   const centerX = width / 2;
@@ -237,8 +270,8 @@ export function RadialGauge({
   const valueRingInner = radius - referenceRingWidth;
   const valueRingOuter = radius - outerRingWidth - outerRingGap;
 
-  // Calculate value angle
-  const normalizedValue = Math.max(0, Math.min(1, (value - min) / (max - min)));
+  // Calculate value angle using animated value
+  const normalizedValue = Math.max(0, Math.min(1, (tweenValue - min) / (max - min)));
   const valueAngle = startRad + normalizedValue * (endRad - startRad);
 
   // Convert thresholds to segments

@@ -17,6 +17,10 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@types/d3-ease": "^3.0.2",
+    "@types/d3-interpolate": "^3.0.4",
+    "d3-ease": "^3.0.1",
+    "d3-interpolate": "^3.0.1",
     "d3-shape": "^3.2.0"
   },
   "peerDependencies": {
