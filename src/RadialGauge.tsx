@@ -34,6 +34,12 @@ interface GaugeProps {
   unitTextProps?: SvgTextProps;
   thresholdTicksProps?: React.SVGLineElementAttributes<SVGLineElement>;
   thresholdTextProps?: SvgTextProps;
+
+  verticalOffset?: number;
+  outerRingWidth?: number;
+  outerRingGap?: number;
+  referenceRingWidth?: number;
+  indicatorLength?: number;
 }
 
 function degreesToRadians(degrees: number): number {
@@ -206,29 +212,30 @@ export function RadialGauge({
   unitTextProps,
   thresholdTicksProps,
   thresholdTextProps,
+
+  // Arc dimensions
+  verticalOffset = 10,
+  outerRingWidth = 3,
+  outerRingGap = 2,
+  referenceRingWidth = 14,
+  indicatorLength = 15,
 }: GaugeProps) {
   const svgId = React.useId();
-  const VERTICAL_OFFSET = 10;
 
   const radius = Math.min(width, height) / 2;
   const centerX = width / 2;
-  const centerY = height / 2 + VERTICAL_OFFSET;
+  const centerY = height / 2 + verticalOffset;
 
   // Convert angles to radians
   const startRad = degreesToRadians(startAngle);
   const endRad = degreesToRadians(endAngle);
 
-  // Arc dimensions
-  const OUTER_RING_WIDTH = 3;
-  const OUTER_RING_GAP = 2;
-  const REFERENCE_RING_WIDTH = 14;
-
-  const outerRingInner = radius - OUTER_RING_WIDTH;
+  const outerRingInner = radius - outerRingWidth;
   const outerRingOuter = radius;
-  const referenceRingInner = radius - REFERENCE_RING_WIDTH;
-  const referenceRingOuter = radius - OUTER_RING_WIDTH - OUTER_RING_GAP;
-  const valueRingInner = radius - REFERENCE_RING_WIDTH;
-  const valueRingOuter = radius - OUTER_RING_WIDTH - OUTER_RING_GAP;
+  const referenceRingInner = radius - referenceRingWidth;
+  const referenceRingOuter = radius - outerRingWidth - outerRingGap;
+  const valueRingInner = radius - referenceRingWidth;
+  const valueRingOuter = radius - outerRingWidth - outerRingGap;
 
   // Calculate value angle
   const normalizedValue = Math.max(0, Math.min(1, (value - min) / (max - min)));
@@ -287,8 +294,7 @@ export function RadialGauge({
   );
 
   // indicator
-  const INDICATOR_LENGTH = 15;
-  const indicatorInner = valueRingOuter - INDICATOR_LENGTH;
+  const indicatorInner = valueRingOuter - indicatorLength;
 
   const indicatorTarget = {
     x: valueRingOuter * Math.sin(valueAngle),
