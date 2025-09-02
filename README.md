@@ -1,69 +1,124 @@
-# React + TypeScript + Vite
+# react-radial-gauge-component
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A radial gauge component for React. Inspired by [react-gauge-component](https://www.npmjs.com/package/react-gauge-component) but with other features and tradeoffs allowing for more customization.
 
-Currently, two official plugins are available:
+## Installation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install react-radial-gauge-component
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Props
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `value` | `number` | - | **Required.** Current value to display on the gauge |
+| `max` | `number` | - | **Required.** Maximum value of the gauge |
+| `unit` | `string` | - | **Required.** Unit label displayed below the value |
+| `min` | `number` | `0` | Minimum value of the gauge |
+| `width` | `number` | `140` | Width of the gauge in pixels |
+| `height` | `number` | `140` | Height of the gauge in pixels |
+| `startAngle` | `number` | `-40` | Starting angle of the gauge arc in degrees |
+| `endAngle` | `number` | `220` | Ending angle of the gauge arc in degrees |
+| `referenceThresholds` | `SegmentRange[]` | `[{ value: max, color: "silver" }]` | Background threshold segments |
+| `thresholds` | `SegmentRange[]` | Auto-generated | Color thresholds for different value ranges |
+| `valueFormat` | `(value: unknown) => string` | `(value) => value` | Function to format the displayed value |
+| `showThresholdTicks` | `boolean` | `false` | Whether to show tick marks at threshold boundaries |
+| `showThresholdLabels` | `boolean` | `false` | Whether to show labels at threshold boundaries |
+| `centerTextProps` | `SvgTextProps` | - | Props for the center value text element |
+| `unitTextProps` | `SvgTextProps` | - | Props for the unit text element |
+| `thresholdTicksProps` | `SVGLineElementAttributes` | - | Props for threshold tick lines |
+| `thresholdTextProps` | `SvgTextProps` | - | Props for threshold labels |
+| `verticalOffset` | `number` | `10` | Vertical offset for the gauge position |
+| `outerRingWidth` | `number` | `3` | Width of the outer ring |
+| `outerRingGap` | `number` | `2` | Gap between outer ring and reference ring |
+| `referenceRingWidth` | `number` | `14` | Width of the reference ring |
+| `indicatorLength` | `number` | `15` | Length of the value indicator line |
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Usage
+
+### Basic Usage
+
+```jsx
+import { RadialGauge } from 'react-radial-gauge-component';
+
+function App() {
+  const [value, setValue] = useState(25);
+  return (
+    <RadialGauge 
+      value={value} 
+      max={100} 
+      unit="rpm" 
+    />
+  );
+}
+```
+
+### Multiple Thresholds
+
+```jsx
+<RadialGauge
+  value={25}
+  max={100}
+  unit="rpm"
+  thresholds={[
+    { value: 10, color: "tomato" },
+    { value: 20, color: "orange" },
+    { value: 80, color: "limegreen" },
+    { value: 90, color: "orange" },
+    { value: 100, color: "tomato" },
+  ]}
+/>
+```
+
+### Half-Moon Style
+
+```jsx
+<RadialGauge
+  value={25}
+  max={100}
+  unit="rpm"
+  startAngle={0}
+  endAngle={180}
+  centerTextProps={{
+    fontSize: "1.25rem",
+    y: -20,
+  }}
+  unitTextProps={{
+    y: -2,
+  }}
+  verticalOffset={25}
+/>
+```
+
+### With Threshold Ticks and Labels
+
+```jsx
+<RadialGauge
+  value={25}
+  max={100}
+  unit="rpm"
+  showThresholdTicks={true}
+  showThresholdLabels={true}
+  thresholdTextProps={{
+    color: "gray",
+  }}
+  thresholdTicksProps={{
+    stroke: "gray",
+  }}
+/>
+```
+
+### Custom Sizing
+
+```jsx
+<RadialGauge
+  value={25}
+  max={100}
+  unit="rpm"
+  outerRingWidth={5}
+  outerRingGap={0}
+  referenceRingWidth={20}
+  indicatorLength={20}
+/>
 ```
