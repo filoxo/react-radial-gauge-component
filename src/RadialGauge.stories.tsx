@@ -104,11 +104,22 @@ export const CustomSizing: Story = {
   args: {
     value: 25,
     max: 100,
-    unit: "rpm",
-    outerRingWidth: 5,
+    unit: "RPM",
+    width: 200,
+    height: 200,
+    valueFormat: (value) => `${value}k`,
+    outerRingWidth: 10,
     outerRingGap: 0,
-    referenceRingWidth: 20,
-    indicatorLength: 20,
+    referenceRingWidth: 30,
+    indicatorLength: 30,
+    centerTextProps: {
+      fontSize: "3.5rem",
+      y: 2,
+    },
+    unitTextProps: {
+      fontSize: "1rem",
+      y: 60,
+    },
   },
 };
 
