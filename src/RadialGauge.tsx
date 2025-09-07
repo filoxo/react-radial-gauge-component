@@ -17,18 +17,28 @@ interface ReferenceRingSegment {
 type SvgTextProps = React.SVGTextElementAttributes<SVGTextElement>;
 
 interface GaugeProps {
+  /** The current value of the gauge */
   value: number;
-  min?: number;
+  /** The maximum value of the gauge */
   max: number;
-  unit: string;
+  /** The minimum value of the gauge */
+  min?: number;
+  /** Use to display a unit under the value */
+  unit?: string;
+  /** Width of the containing svg */
   width?: number;
+  /** Height of the containing svg */
   height?: number;
+
   startAngle?: number;
   endAngle?: number;
 
   referenceThresholds?: Array<SegmentRange>;
+  /** Thresholds used to color the gauge */
   thresholds?: Array<SegmentRange>;
+  /** Function to format the value. Use this for things like conversions to percentage, using .toFixed to limit decimal places, etc. */
   valueFormat?: (value: unknown) => string;
+
   showThresholdTicks?: boolean;
   showThresholdLabels?: boolean;
 
@@ -36,9 +46,12 @@ interface GaugeProps {
   unitTextProps?: SvgTextProps;
   thresholdTicksProps?: React.SVGLineElementAttributes<SVGLineElement>;
   thresholdTextProps?: SvgTextProps;
+  /** length of valueArc animation in ms. Set to 0 to disable animation. */
   transitionDuration?: number;
+  /** Easing function for animating value arc. Find compatible easing functions at https://easings.net/ */
   easingFn?: (t: number) => number;
 
+  /** Vertical offset of entire gauge */
   verticalOffset?: number;
   outerRingWidth?: number;
   outerRingGap?: number;
@@ -194,10 +207,6 @@ function createThresholdTicks(
   return ticks;
 }
 
-/**
- * @property {number} transitionDuration - length of valueArc animation in ms. Set to 0 to disable animation.
- * @property {string} indicatorColor - custom color for indicator + valueArc. Leave undefined to match threshold.
- */
 export function RadialGauge({
   value,
   min = 0,
@@ -469,7 +478,7 @@ export function RadialGauge({
 
           {/* Center text */}
           <text {...getCenterTextProps()}>
-            {value ? valueFormat(value) : "--"}
+            {value !== undefined && value !== null ? valueFormat(value) : "--"}
           </text>
           {unit && <text {...getUnitTextProps()}>{unit}</text>}
         </g>
