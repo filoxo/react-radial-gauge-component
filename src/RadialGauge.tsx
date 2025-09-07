@@ -327,12 +327,11 @@ export function RadialGauge({
 
   // Value arc
   const valueColor =
-    indicatorColor ||
     thresholdSegments.find(
       (segment) =>
         normalizedValue >= segment.start && normalizedValue <= segment.end
-    )?.color ||
-    "#999";
+    )?.color || "#999";
+
   const valueArcPath = createArcPath(
     valueRingInner,
     valueRingOuter,
@@ -464,7 +463,7 @@ export function RadialGauge({
           {/* Indicator */}
           <path
             d={`M ${indicatorTarget.cx} ${indicatorTarget.cy} L ${indicatorTarget.x} ${indicatorTarget.y}`}
-            stroke={valueColor}
+            stroke={indicatorColor || valueColor}
             strokeWidth={3}
           />
 
