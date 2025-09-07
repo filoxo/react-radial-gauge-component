@@ -51,8 +51,8 @@ export const MutlipleThresholds: Story = {
       return () => clearInterval(interval);
     }, [args.max]);
 
-    return <RadialGauge {...args} value={value} width={200} height={200} />
-  }
+    return <RadialGauge {...args} value={value} />;
+  },
 };
 
 export const HalfMoon: Story = {
@@ -107,5 +107,14 @@ export const CustomSizing: Story = {
     outerRingGap: 0,
     referenceRingWidth: 20,
     indicatorLength: 20,
+  },
+};
+
+export const IndicatorColor: Story = {
+  args: {
+    value: 25,
+    max: 100,
+    unit: "rpm",
+    indicatorColor: "dimgray",
   },
 };
