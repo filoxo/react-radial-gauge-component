@@ -44,6 +44,7 @@ interface GaugeProps {
   outerRingGap?: number;
   referenceRingWidth?: number;
   indicatorLength?: number;
+  indicatorColor?: string;
 }
 
 function degreesToRadians(degrees: number): number {
@@ -194,7 +195,8 @@ function createThresholdTicks(
 }
 
 /**
- * @property transitionDuration - length of valueArc animation in ms. Set to 0 to disable animation.
+ * @property {number} transitionDuration - length of valueArc animation in ms. Set to 0 to disable animation.
+ * @property {string} indicatorColor - custom color for indicator + valueArc. Leave undefined to match threshold.
  */
 export function RadialGauge({
   value,
@@ -228,14 +230,14 @@ export function RadialGauge({
   outerRingGap = 2,
   referenceRingWidth = 14,
   indicatorLength = 15,
+  indicatorColor,
 }: GaugeProps) {
   const svgId = React.useId();
   const [tweenValue, setTweenValue] = useState(value);
   const animationRef = useRef<number>(0);
-  const animationValue = transitionDuration ? tweenValue : value
+  const animationValue = transitionDuration > 0 ? tweenValue : value;
 
   useEffect(() => {
-
     if (!transitionDuration) return;
 
     const startValue = tweenValue;
@@ -325,10 +327,12 @@ export function RadialGauge({
 
   // Value arc
   const valueColor =
+    indicatorColor ||
     thresholdSegments.find(
       (segment) =>
         normalizedValue >= segment.start && normalizedValue <= segment.end
-    )?.color || "#999";
+    )?.color ||
+    "#999";
   const valueArcPath = createArcPath(
     valueRingInner,
     valueRingOuter,
