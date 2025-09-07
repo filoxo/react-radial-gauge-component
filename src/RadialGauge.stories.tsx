@@ -21,6 +21,25 @@ export const Default: Story = {
     max: 100,
     unit: "rpm",
   },
+  render: (args) => {
+    const [value, setValue] = useState(args.value);
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setValue((prev) => {
+          const increase = Math.round(Math.random() * 10);
+          const newValue = prev + increase;
+          if (newValue > args.max) {
+            return 0;
+          }
+          return newValue;
+        });
+      }, 2000);
+      return () => clearInterval(interval);
+    }, [args.max]);
+
+    return <RadialGauge {...args} value={value} />;
+  },
 };
 
 export const MutlipleThresholds: Story = {
@@ -35,23 +54,6 @@ export const MutlipleThresholds: Story = {
       { value: 90, color: "orange" },
       { value: 100, color: "tomato" },
     ],
-  },
-  render: (args) => {
-    const [value, setValue] = useState(args.value);
-
-    useEffect(() => {
-      const interval = setInterval(() => {
-        setValue((prev) => {
-          if (prev + 10 >= args.max) {
-            return 0;
-          }
-          return prev + 10;
-        });
-      }, 2000);
-      return () => clearInterval(interval);
-    }, [args.max]);
-
-    return <RadialGauge {...args} value={value} />;
   },
 };
 
