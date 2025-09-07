@@ -36,7 +36,7 @@ interface GaugeProps {
   unitTextProps?: SvgTextProps;
   thresholdTicksProps?: React.SVGLineElementAttributes<SVGLineElement>;
   thresholdTextProps?: SvgTextProps;
-  transtionDuration?: number;
+  transitionDuration?: number;
   easingFn?: (t: number) => number;
 
   verticalOffset?: number;
@@ -193,6 +193,9 @@ function createThresholdTicks(
   return ticks;
 }
 
+/**
+ * @property transitionDuration - length of valueArc animation in ms. Set to 0 to disable animation.
+ */
 export function RadialGauge({
   value,
   min = 0,
@@ -216,8 +219,8 @@ export function RadialGauge({
   unitTextProps,
   thresholdTicksProps,
   thresholdTextProps,
-  transtionDuration = 250,
-  easingFn = easeQuadOut as (t: number) => number,
+  transitionDuration = 250,
+  easingFn = easeQuadOut,
 
   // Arc dimensions
   verticalOffset = 10,
@@ -229,31 +232,35 @@ export function RadialGauge({
   const svgId = React.useId();
   const [tweenValue, setTweenValue] = useState(value);
   const animationRef = useRef<number>(0);
+  const animationValue = transitionDuration ? tweenValue : value
 
   useEffect(() => {
+
+    if (!transitionDuration) return;
+
     const startValue = tweenValue;
     const startTime = Date.now();
 
     const animate = () => {
       const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / transtionDuration, 1);
+      const progress = Math.min(elapsed / transitionDuration, 1);
       const easedProgress = easingFn(progress);
-      
+
       const currentValue = interpolate(startValue, value)(easedProgress);
       setTweenValue(currentValue);
-      
+
       if (progress < 1) {
         animationRef.current = requestAnimationFrame(animate);
       }
     };
-    
+
     animate();
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [value, tweenValue, transtionDuration, easingFn]);
+  }, [value, tweenValue, transitionDuration, easingFn]);
 
   const radius = Math.min(width, height) / 2;
   const centerX = width / 2;
@@ -271,7 +278,10 @@ export function RadialGauge({
   const valueRingOuter = radius - outerRingWidth - outerRingGap;
 
   // Calculate value angle using animated value
-  const normalizedValue = Math.max(0, Math.min(1, (tweenValue - min) / (max - min)));
+  const normalizedValue = Math.max(
+    0,
+    Math.min(1, (animationValue - min) / (max - min))
+  );
   const valueAngle = startRad + normalizedValue * (endRad - startRad);
 
   // Convert thresholds to segments
