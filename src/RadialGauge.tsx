@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { arc as d3Arc } from "d3-shape";
+import { interpolate } from "d3-interpolate";
+import { easeQuadOut } from "d3-ease";
 
 interface SegmentRange {
   value: number;
@@ -34,12 +36,15 @@ interface GaugeProps {
   unitTextProps?: SvgTextProps;
   thresholdTicksProps?: React.SVGLineElementAttributes<SVGLineElement>;
   thresholdTextProps?: SvgTextProps;
+  transitionDuration?: number;
+  easingFn?: (t: number) => number;
 
   verticalOffset?: number;
   outerRingWidth?: number;
   outerRingGap?: number;
   referenceRingWidth?: number;
   indicatorLength?: number;
+  indicatorColor?: string;
 }
 
 function degreesToRadians(degrees: number): number {
@@ -189,6 +194,10 @@ function createThresholdTicks(
   return ticks;
 }
 
+/**
+ * @property {number} transitionDuration - length of valueArc animation in ms. Set to 0 to disable animation.
+ * @property {string} indicatorColor - custom color for indicator + valueArc. Leave undefined to match threshold.
+ */
 export function RadialGauge({
   value,
   min = 0,
@@ -212,6 +221,8 @@ export function RadialGauge({
   unitTextProps,
   thresholdTicksProps,
   thresholdTextProps,
+  transitionDuration = 250,
+  easingFn = easeQuadOut,
 
   // Arc dimensions
   verticalOffset = 10,
@@ -219,8 +230,39 @@ export function RadialGauge({
   outerRingGap = 2,
   referenceRingWidth = 14,
   indicatorLength = 15,
+  indicatorColor,
 }: GaugeProps) {
   const svgId = React.useId();
+  const [tweenValue, setTweenValue] = useState(value);
+  const animationRef = useRef<number>(0);
+  const animationValue = transitionDuration > 0 ? tweenValue : value;
+
+  useEffect(() => {
+    if (!transitionDuration) return;
+
+    const startValue = tweenValue;
+    const startTime = Date.now();
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / transitionDuration, 1);
+      const easedProgress = easingFn(progress);
+
+      const currentValue = interpolate(startValue, value)(easedProgress);
+      setTweenValue(currentValue);
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    animate();
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [value, tweenValue, transitionDuration, easingFn]);
 
   const radius = Math.min(width, height) / 2;
   const centerX = width / 2;
@@ -237,8 +279,11 @@ export function RadialGauge({
   const valueRingInner = radius - referenceRingWidth;
   const valueRingOuter = radius - outerRingWidth - outerRingGap;
 
-  // Calculate value angle
-  const normalizedValue = Math.max(0, Math.min(1, (value - min) / (max - min)));
+  // Calculate value angle using animated value
+  const normalizedValue = Math.max(
+    0,
+    Math.min(1, (animationValue - min) / (max - min))
+  );
   const valueAngle = startRad + normalizedValue * (endRad - startRad);
 
   // Convert thresholds to segments
@@ -286,6 +331,7 @@ export function RadialGauge({
       (segment) =>
         normalizedValue >= segment.start && normalizedValue <= segment.end
     )?.color || "#999";
+
   const valueArcPath = createArcPath(
     valueRingInner,
     valueRingOuter,
@@ -417,7 +463,7 @@ export function RadialGauge({
           {/* Indicator */}
           <path
             d={`M ${indicatorTarget.cx} ${indicatorTarget.cy} L ${indicatorTarget.x} ${indicatorTarget.y}`}
-            stroke={valueColor}
+            stroke={indicatorColor || valueColor}
             strokeWidth={3}
           />
 

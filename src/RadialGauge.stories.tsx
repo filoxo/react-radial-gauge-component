@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { RadialGauge } from "./RadialGauge";
+import { useEffect, useState } from "react";
 
 const meta = {
   title: "RadialGauge",
@@ -34,6 +35,23 @@ export const MutlipleThresholds: Story = {
       { value: 90, color: "orange" },
       { value: 100, color: "tomato" },
     ],
+  },
+  render: (args) => {
+    const [value, setValue] = useState(args.value);
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setValue((prev) => {
+          if (prev + 10 >= args.max) {
+            return 0;
+          }
+          return prev + 10;
+        });
+      }, 2000);
+      return () => clearInterval(interval);
+    }, [args.max]);
+
+    return <RadialGauge {...args} value={value} />;
   },
 };
 
@@ -89,5 +107,14 @@ export const CustomSizing: Story = {
     outerRingGap: 0,
     referenceRingWidth: 20,
     indicatorLength: 20,
+  },
+};
+
+export const IndicatorColor: Story = {
+  args: {
+    value: 25,
+    max: 100,
+    unit: "rpm",
+    indicatorColor: "dimgray",
   },
 };
