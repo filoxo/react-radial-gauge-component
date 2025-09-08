@@ -131,3 +131,12 @@ export const IndicatorColor: Story = {
     indicatorColor: "dimgray",
   },
 };
+
+export const IndicatorType: Story = {
+  args: {
+    value: 65,
+    max: 100,
+    unit: "%",
+    indicatorType: "triangle",
+  },
+};

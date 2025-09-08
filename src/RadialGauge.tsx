@@ -58,6 +58,8 @@ interface GaugeProps {
   referenceRingWidth?: number;
   indicatorLength?: number;
   indicatorColor?: string;
+  /** Type of indicator to display */
+  indicatorType?: "line" | "triangle";
 }
 
 function degreesToRadians(degrees: number): number {
@@ -207,6 +209,35 @@ function createThresholdTicks(
   return ticks;
 }
 
+function createTrianglePath(
+  angle: number,
+  radius: number,
+  size: number
+): string {
+  // Position triangle inside the arc, pointing outward toward track
+  const triangleX = radius * Math.sin(angle);
+  const triangleY = -radius * Math.cos(angle);
+
+  // Calculate equilateral triangle points
+  const height = (size * Math.sqrt(3)) / 2; // Height of equilateral triangle
+  const halfBase = size / 2;
+
+  // Perpendicular angle for triangle base
+  const perpAngle = angle + Math.PI / 2;
+
+  // Triangle tip (pointing toward track)
+  const tipX = triangleX + (height - 4) * Math.sin(angle);
+  const tipY = triangleY - (height - 4) * Math.cos(angle);
+
+  // Triangle base points (equilateral)
+  const base1X = triangleX + halfBase * Math.sin(perpAngle);
+  const base1Y = triangleY - halfBase * Math.cos(perpAngle);
+  const base2X = triangleX - halfBase * Math.sin(perpAngle);
+  const base2Y = triangleY + halfBase * Math.cos(perpAngle);
+
+  return `M ${tipX} ${tipY} L ${base1X} ${base1Y} L ${base2X} ${base2Y} Z`;
+}
+
 export function RadialGauge({
   value,
   min = 0,
@@ -240,6 +271,7 @@ export function RadialGauge({
   referenceRingWidth = 14,
   indicatorLength = 15,
   indicatorColor,
+  indicatorType = "line",
 }: GaugeProps) {
   const svgId = React.useId();
   const [tweenValue, setTweenValue] = useState(value);
@@ -358,6 +390,14 @@ export function RadialGauge({
     cy: -indicatorInner * Math.cos(valueAngle),
   };
 
+  // Triangle indicator path (positioned inside the value arc)
+  const TRIANGLE_SIZE = 12;
+  const triangleRadius = valueRingInner - TRIANGLE_SIZE * 0.5;
+  const trianglePath =
+    indicatorType === "triangle"
+      ? createTrianglePath(valueAngle, triangleRadius, TRIANGLE_SIZE)
+      : null;
+
   // center text
 
   const getCenterTextProps = () => {
@@ -470,11 +510,15 @@ export function RadialGauge({
           </g>
 
           {/* Indicator */}
-          <path
-            d={`M ${indicatorTarget.cx} ${indicatorTarget.cy} L ${indicatorTarget.x} ${indicatorTarget.y}`}
-            stroke={indicatorColor || valueColor}
-            strokeWidth={3}
-          />
+          {indicatorType === "triangle" ? (
+            <path d={trianglePath!} fill={indicatorColor || valueColor} />
+          ) : (
+            <path
+              d={`M ${indicatorTarget.cx} ${indicatorTarget.cy} L ${indicatorTarget.x} ${indicatorTarget.y}`}
+              stroke={indicatorColor || valueColor}
+              strokeWidth={3}
+            />
+          )}
 
           {/* Center text */}
           <text {...getCenterTextProps()}>
