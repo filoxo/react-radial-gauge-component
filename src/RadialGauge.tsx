@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { arc as d3Arc } from "d3-shape";
-import { interpolate } from "d3-interpolate";
+import { interpolateNumber } from "d3-interpolate";
 import { easeQuadOut } from "d3-ease";
 
 interface SegmentRange {
@@ -257,7 +257,7 @@ export function RadialGauge({
       const progress = Math.min(elapsed / transitionDuration, 1);
       const easedProgress = easingFn(progress);
 
-      const currentValue = interpolate(startValue, value)(easedProgress);
+      const currentValue = interpolateNumber(startValue, value)(easedProgress);
       setTweenValue(currentValue);
 
       if (progress < 1) {
