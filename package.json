@@ -5,8 +5,12 @@
   "files": [
     "dist"
   ],
-  "module": "./dist/radial-gauge.js",
-  "main": "./dist/radial-gauge.umd.js",
+  "exports": {
+    ".": {
+      "import": "./dist/radial-gauge.js",
+      "require": "./dist/radial-gauge.umd.cjs"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
